@@ -5,7 +5,8 @@ from agents import (
     OpenAIChatCompletionsModel,
     RunConfig,
     Agent,
-    Runner
+    Runner,
+    function_tool
 )
 
 
@@ -38,16 +39,29 @@ run_config = RunConfig(
 # ======================== GEMINI KEYS STEP END ======================== 
 
 
+
+# ================================ TOOLS ===============================
+
+@function_tool
+def get_advice(a: str) -> str:
+    """This function will recieve a question and based on this i wil generate advice"""
+    print(f"Agent call function with: {a}")
+    return f"your question: {a}, My Advice: Never trust any one blindly... and follow health diet"
+
+
+
+
 # ============================= SAME STEPS ====================================
 agent = Agent(
     name="Career Mentor Agent",
-    instructions="Provides help for academics questions"
+    instructions="Provides help for academics questions if user ask for advice then use get_advice",
+    tools=[get_advice]
 )
 
 
 result = Runner.run_sync(
     agent,
-    input="What is the capital of pakistan",
+    input="i need advice for survive in job",
     run_config=run_config   # for GEMINI only
 )
 
