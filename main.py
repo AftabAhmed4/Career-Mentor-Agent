@@ -10,6 +10,8 @@ from agents import (
 )
 
 import chainlit as cl
+from openai.types.responses import ResponseTextDeltaEvent
+
 
 
 
@@ -151,12 +153,27 @@ MainAgent = Agent(
 @cl.on_message
 async def main(message: cl.Message):
     try:
-        result = await Runner.run(
+        msg = cl.Message(content='Thinking...')
+        await msg.send()
+
+
+        result = Runner.run_streamed(
             MainAgent,
             input = message.content,
             run_config=run_config
         )
-        await cl.Message(result.final_output).send()
+
+        collected = ''
+
+        async for event in result.stream_events():
+            if event.type=="raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
+                token = event.data.delta
+                collected += token
+                await msg.stream_token(token)
+        
+        msg.content = collected
+        await msg.update()
+
     except Exception as e:
         await cl.Message(str(e)).send()
 
