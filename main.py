@@ -150,16 +150,31 @@ MainAgent = Agent(
 
 
 
+@cl.on_chat_start
+async def handle_chart_start():
+    cl.user_session.set("history", [])
+    await cl.Message("Hello! I am a Career Mentor Agent.").send()
+
+
+
+
+
+
+
 @cl.on_message
 async def main(message: cl.Message):
     try:
+        history = cl.user_session.get("history")
+
         msg = cl.Message(content='Thinking...')
         await msg.send()
+
+        history.append({"role": "user", "content": message.content})
 
 
         result = Runner.run_streamed(
             MainAgent,
-            input = message.content,
+            input = history,
             run_config=run_config
         )
 
@@ -170,6 +185,8 @@ async def main(message: cl.Message):
                 token = event.data.delta
                 collected += token
                 await msg.stream_token(token)
+
+        history.append({"role": "assistant", "content": result.final_output})
         
         msg.content = collected
         await msg.update()
