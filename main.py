@@ -9,6 +9,7 @@ from agents import (
     function_tool
 )
 
+import chainlit as cl
 
 
 
@@ -68,3 +69,9 @@ result = Runner.run_sync(
 print(result.final_output)
 
 
+
+
+@cl.on_message
+async def main(message: cl.Message):
+    response = message.content
+    await cl.Message(response).send()
